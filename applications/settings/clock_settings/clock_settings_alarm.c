@@ -16,8 +16,11 @@
 
 typedef struct {
     DateTime now;
+    DateTime snooze_until;
     DateTime alarm_start;
     IconAnimation* icon;
+
+    bool is_snooze;
 } ClockSettingsAlramModel;
 
 const NotificationSequence sequence_alarm = {
@@ -93,8 +96,10 @@ int32_t clock_settings_alarm(void* p) {
 
     // View Model
     ClockSettingsAlramModel model;
+    model.is_snooze = false;
 
     furi_hal_rtc_get_datetime(&model.now);
+    furi_hal_rtc_get_alarm(&model.alarm_start);
     model.icon = icon_animation_alloc(&A_Alarm_47x39);
 
     // Alloc message queue
@@ -125,16 +130,28 @@ int32_t clock_settings_alarm(void* p) {
             if(event.type == InputTypePress) {
                 // Snooze
                 if(event.key == InputKeyBack) {
-                    furi_hal_rtc_get_datetime(&model.now);
-                    model.now.minute += SNOOZE_MINUTES;
-                    model.now.hour += model.now.minute / 60;
-                    model.now.minute %= 60;
-                    model.now.hour %= 24;
+                    furi_hal_rtc_get_datetime(&model.snooze_until);
+                    model.snooze_until.minute += SNOOZE_MINUTES;
+                    model.snooze_until.hour += model.snooze_until.minute / 60;
+                    model.snooze_until.minute %= 60;
+                    model.snooze_until.hour %= 24;
 
-                    furi_hal_rtc_set_alarm(NULL, false);
-                    furi_hal_rtc_set_alarm(&model.now, true);
+                    model.is_snooze = true;
+                    model.alarm_start = model.snooze_until; // For correct timeout behavior
+                    view_port_enabled_set(view_port, false);
+                    gui_set_lockdown(gui);
+                } else {
+                    running = false;
                 }
-                running = false;
+            }
+        } else if(model.is_snooze) {
+            furi_hal_rtc_get_datetime(&model.now);
+            if(datetime_datetime_to_timestamp(&model.now) >=
+               datetime_datetime_to_timestamp(&model.snooze_until)) {
+                view_port_enabled_set(view_port, true);
+                gui_remove_lockdown(gui);
+
+                model.is_snooze = false;
             }
         } else {
             notification_message(notification, &sequence_alarm);
@@ -142,7 +159,6 @@ int32_t clock_settings_alarm(void* p) {
             view_port_update(view_port);
 
             // Stop the alarm if it has been ringing for more than TIMEOUT_MINUTES
-            furi_hal_rtc_get_alarm(&model.alarm_start);
             if((model.now.hour == model.alarm_start.hour &&
                 model.now.minute >= model.alarm_start.minute + TIMEOUT_MINUTES) ||
                (model.now.hour == (model.alarm_start.hour + 1) % 24 &&
