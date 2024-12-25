@@ -100,13 +100,13 @@ void gui_remove_framebuffer_callback(Gui* gui, GuiCanvasCommitCallback callback,
  */
 size_t gui_get_framebuffer_size(const Gui* gui);
 
-/** Enable lockdown mode
+/** Set lockdown mode
  *
  * When lockdown mode is enabled, only GuiLayerDesktop is shown.
  * This feature prevents services from showing sensitive information when flipper is locked.
  *
  * @param      gui       Gui instance
- * @param      lockdown  true to enable lockdown mode
+ * @param      lockdown  bool, true if enabled
  */
 void gui_set_lockdown(Gui* gui, bool lockdown);
 
