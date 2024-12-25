@@ -112,7 +112,7 @@ int32_t clock_settings_alarm(void* p) {
 
     // Register view port in GUI
     Gui* gui = furi_record_open(RECORD_GUI);
-    gui_remove_lockdown(gui);
+    gui_set_lockdown_inhibit(gui, true);
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
     NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
@@ -139,7 +139,7 @@ int32_t clock_settings_alarm(void* p) {
                     model.is_snooze = true;
                     model.alarm_start = model.snooze_until; // For correct timeout behavior
                     view_port_enabled_set(view_port, false);
-                    gui_set_lockdown(gui);
+                    gui_set_lockdown_inhibit(gui, false);
                 } else {
                     running = false;
                 }
@@ -149,7 +149,7 @@ int32_t clock_settings_alarm(void* p) {
             if(datetime_datetime_to_timestamp(&model.now) >=
                datetime_datetime_to_timestamp(&model.snooze_until)) {
                 view_port_enabled_set(view_port, true);
-                gui_remove_lockdown(gui);
+                gui_set_lockdown_inhibit(gui, true);
 
                 model.is_snooze = false;
             }
@@ -174,7 +174,7 @@ int32_t clock_settings_alarm(void* p) {
     furi_record_close(RECORD_NOTIFICATION);
 
     view_port_enabled_set(view_port, false);
-    gui_set_lockdown(gui);
+    gui_set_lockdown_inhibit(gui, false);
     gui_remove_view_port(gui, view_port);
     view_port_free(view_port);
     furi_message_queue_free(event_queue);

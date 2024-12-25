@@ -417,7 +417,7 @@ void desktop_unlock(Desktop* desktop) {
 
     view_port_enabled_set(desktop->lock_icon_viewport, false);
     Gui* gui = furi_record_open(RECORD_GUI);
-    gui_remove_lockdown(gui);
+    gui_set_lockdown(gui, false);
     furi_record_close(RECORD_GUI);
     desktop_view_locked_unlock(desktop->locked_view);
     scene_manager_search_and_switch_to_previous_scene(desktop->scene_manager, DesktopSceneMain);

@@ -484,33 +484,32 @@ size_t gui_get_framebuffer_size(const Gui* gui) {
     return canvas_get_buffer_size(gui->canvas);
 }
 
-void gui_set_lockdown(Gui* gui) {
+void gui_set_lockdown(Gui* gui, bool lockdown) {
     furi_check(gui);
 
     gui_lock(gui);
-    FURI_LOG_D(TAG, "Releasing lockdown semaphore");
-    furi_semaphore_release(gui->unlock);
+    gui->lockdown = lockdown;
     gui_unlock(gui);
 
     // Request redraw
     gui_update(gui);
 }
 
-void gui_remove_lockdown(Gui* gui) {
+void gui_set_lockdown_inhibit(Gui* gui, bool inhibit) {
     furi_check(gui);
-    FURI_LOG_D(TAG, "Acquiring lockdown semaphore");
 
     gui_lock(gui);
-    if(furi_semaphore_acquire(gui->unlock, 1000) != FuriStatusOk) {
-        furi_crash("Could not acquire lockdown semaphore");
-    }
+    gui->lockdown_inhibit = inhibit;
     gui_unlock(gui);
+
+    // Request redraw
+    gui_update(gui);
 }
 
 bool gui_is_lockdown(const Gui* gui) {
     furi_check(gui);
 
-    return furi_semaphore_get_count(gui->unlock) == 0;
+    return gui->lockdown && !gui->lockdown_inhibit;
 }
 
 Canvas* gui_direct_draw_acquire(Gui* gui) {
@@ -547,8 +546,6 @@ Gui* gui_alloc(void) {
     gui->thread_id = furi_thread_get_current_id();
     // Allocate mutex
     gui->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    // Semaphore for the lockdown state
-    gui->unlock = furi_semaphore_alloc(2, 1);
 
     // Layers
     for(size_t i = 0; i < GuiLayerMAX; i++) {

@@ -106,14 +106,19 @@ size_t gui_get_framebuffer_size(const Gui* gui);
  * This feature prevents services from showing sensitive information when flipper is locked.
  *
  * @param      gui       Gui instance
+ * @param      lockdown  true to enable lockdown mode
  */
-void gui_set_lockdown(Gui* gui);
+void gui_set_lockdown(Gui* gui, bool lockdown);
 
-/** Disable lockdown mode
- *
+/** Inhibit lockdown mode
+ * 
+ * Lockdown mode can be inhibited by calling this function with inhibit set to true.
+ * This is used to show information even when flipper is locked.
+ * 
  * @param      gui       Gui instance
+ * @param      inhibit   true to inhibit lockdown mode
  */
-void gui_remove_lockdown(Gui* gui);
+void gui_set_lockdown_inhibit(Gui* gui, bool inhibit);
 
 /** Check if Gui is in lockdown mode
  * 

@@ -45,7 +45,7 @@ void desktop_scene_locked_on_enter(void* context) {
     if(state == DesktopSceneLockedStateFirstEnter) {
         view_port_enabled_set(desktop->lock_icon_viewport, true);
         Gui* gui = furi_record_open(RECORD_GUI);
-        gui_set_lockdown(gui);
+        gui_set_lockdown(gui, true);
         furi_record_close(RECORD_GUI);
 
         if(desktop_pin_code_is_set()) {
